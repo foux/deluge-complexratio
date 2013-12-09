@@ -44,10 +44,16 @@ __plugin_name__ = "ComplexRatio"
 __author__ = "Francois-Xavier Payet"
 __author_email__ = "fx.payet@tfdn.org"
 __version__ = "0.1"
-__url__ = ""
+__url__ = "https://github.com/foux/deluge-complexratio"
 __license__ = "GPLv3"
-__description__ = ""
-__long_description__ = """"""
+__description__ = "A plugin to automatically stop torrents after a selected ratio and seed time as elapsed"
+__long_description__ = """
+ComplexRatio allows you to automatically stop torrents seeding after the following criteria are met :
+  - Configured ratio AND seed time are both exceeded
+  - Or, a configured forced seed time has exceeded, regardless of the ratio.
+  
+The plugin will check your torrents every 15 seconds.
+"""
 __pkg_data__ = {"deluge.plugins."+__plugin_name__.lower(): ["template/*", "data/*"]}
 
 setup(
