@@ -1,0 +1,8 @@
+
+    [deluge.plugin.core]
+    ComplexRatio = deluge.plugins.complexratio:CorePlugin
+    [deluge.plugin.gtkui]
+    ComplexRatio = deluge.plugins.complexratio:GtkUIPlugin
+    [deluge.plugin.web]
+    ComplexRatio = deluge.plugins.complexratio:WebUIPlugin
+    

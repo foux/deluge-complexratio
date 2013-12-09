@@ -1,0 +1,14 @@
+setup.py
+ComplexRatio.egg-info/PKG-INFO
+ComplexRatio.egg-info/SOURCES.txt
+ComplexRatio.egg-info/dependency_links.txt
+ComplexRatio.egg-info/entry_points.txt
+ComplexRatio.egg-info/namespace_packages.txt
+ComplexRatio.egg-info/top_level.txt
+deluge/__init__.py
+deluge/plugins/__init__.py
+deluge/plugins/complexratio/__init__.py
+deluge/plugins/complexratio/common.py
+deluge/plugins/complexratio/core.py
+deluge/plugins/complexratio/gtkui.py
+deluge/plugins/complexratio/webui.py
