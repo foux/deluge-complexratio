@@ -43,13 +43,14 @@ from deluge.plugins.pluginbase import CorePluginBase
 import deluge.component as component
 import deluge.configmanager
 from deluge.core.rpcserver import export
+from twisted.internet.task import LoopingCall
 
 DEFAULT_PREFS = {
     "default" : {
         "activated" : False,
         "ratio": 0.0,
-        "upload": 0,
-        "time": 0
+        "force_stop": 0.0,
+        "time": 0.0
     }
 }
 
@@ -58,14 +59,68 @@ log = logging.getLogger(__name__)
 class Core(CorePluginBase):
     def enable(self):
         self.config = deluge.configmanager.ConfigManager("complexratio.conf", DEFAULT_PREFS)
+        
+        #We check to see if labels are enabled
+        if 'Label' in component.get("CorePluginManager").get_enabled_plugins():
+            # Label is enabled, we create an entry for each label
+            labelPlugin = component.get("CorePlugin.Label")
+            for currentLabel in labelPlugin.get_labels():
+                if not currentLabel in self.config:
+                    self.add_label_to_config(currentLabel)
+            self.config.save()
+        
+        self.check_torrents_timer = LoopingCall(self.check_torrents)
+        self.check_torrents_timer.start(15)
+        log.debug("ComplexRatio plugin enabled!")
 
     def disable(self):
+        self.check_torrents_timer.stop()
+        log.debug("ComplexRatio plugin disabled")
         pass
 
     def update(self):
-        torrents = self.core.
-        for current_torrent in torrents:
+        pass
+    
+    def check_torrents(self):
+        for torrent in component.get("Core").torrentmanager.get_torrent_list():
+            status_keys = ["active_time",
+                           "is_seed",
+                           "seeding_time",
+                           "paused",
+                           "ratio",
+                           "state",
+                           "name",
+                           "label"
+            ]
+            status = component.get("Core").get_torrent_status(torrent,status_keys)
+            if status["is_seed"] and not status["paused"]:
+                group = status["label"] or "default"
+                seeding_time = status["seeding_time"] / 3600.
+                ratio = status["ratio"]
+                
+                if not group in self.config:
+                    self.add_label_to_config(group)
+                
+                if self.config[group]["activated"]:
+                    if seeding_time > self.config[group]["time"] and ratio > self.config[group]["ratio"]:
+                        log.info("%s meets ratio deletion requirements. Stopping the torrent" % status["name"])
+                        component.get("Core").pause_torrent([torrent])
+                    elif seeding_time > self.config[group]["force_stop"]:
+                        log.info("%s seeds time exceeds maximum allowed. Stopping the torrent" % status["name"])
+                        component.get("Core").torrentmanager.load_torrent(torrent).pause()
+                    else:
+                        log.debug("%s doesn't meets requirements. Not stopping. Ratio is %s and seed time is %s hours" % (status["name"],ratio,seeding_time))
+                else:
+                    log.debug("Config is deactivated for label %s, not considering torrent %s" % (group,status["name"]))
             
+    def add_label_to_config(self, label):
+        log.debug("No config for %s yet, creating it" % label)
+        self.config[label] = {
+                              "activated" : False,
+                              "ratio": 0.0,
+                              "force_stop": 0.0,
+                              "time": 0
+                              }
 
     @export
     def set_config(self, config):
